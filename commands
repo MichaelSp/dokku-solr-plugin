@@ -48,6 +48,11 @@ if [[ $1 == elasticsearch:* ]]; then
     ENVVAR_NAME="ELASTICSEARCH_URL"
 fi
 
+if [[ ! -d "$DOKKU_ROOT/$APP/$PLUGIN_NAME" ]]; then
+    mkdir -p "$DOKKU_ROOT/$APP/$PLUGIN_NAME"
+    chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME"
+fi
+
 case "$1" in
   elasticsearch:create)
     # Check if Elasticsearch container is installed
@@ -76,6 +81,11 @@ case "$1" in
         chown -R dokku:dokku $VOLUME_FILE
         VOLUME=$CONTAINER_DATA_DIR
     fi
+    if [[ ! -f "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config" ]]; then
+        mkdir -p "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config"
+        chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes"
+    fi
+    CONFIG_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config:/etc/elasticsearch"
 
     # Fork DB image
     echo "Running parent image"
@@ -85,8 +95,8 @@ case "$1" in
     IMAGE=$(docker commit $ID)
     docker tag $IMAGE $CONTAINER_NAME
     # Launch container
-    echo docker run -v $VOLUME -p 9200 -d $CONTAINER_NAME /run.sh
-    ID=$(docker run -v $VOLUME -p 9200 -d $CONTAINER_NAME /run.sh)
+    echo docker run -v "$CONFIG_VOLUME" -v $VOLUME -p 9200 -d $CONTAINER_NAME /run.sh
+    ID=$(docker run -v "$CONFIG_VOLUME" -v $VOLUME -p 9200 -d $CONTAINER_NAME /run.sh)
     sleep 4
     # Rename persistent volume
     if [[ ! -f "$VOLUME_FILE" ]]; then
@@ -111,7 +121,7 @@ case "$1" in
     ;;
 
   elasticsearch:delete)
-    ID=$(docker ps -a | grep "$CONTAINER_NAME" |  awk '{print $1}')
+    ID=$(docker ps -a | grep "$CONTAINER_NAME:latest" |  awk '{print $1}')
     # Stop and remove the container
     if [[ ! -z $ID ]]; then
         docker stop $ID > /dev/null
@@ -120,7 +130,7 @@ case "$1" in
         sleep 1
     fi
     # Remove image
-    IMAGE=$(docker images | grep "$DOCKER_IMAGE" | awk '{ print $1 }')
+    IMAGE=$(docker images | grep "$CONTAINER_NAME" | awk '{ print $1 }')
     if [[ ! -z $IMAGE ]]; then
         docker rmi $IMAGE > /dev/null
     fi
@@ -128,9 +138,11 @@ case "$1" in
     if [[ -d $VOLUME_FILE ]]; then
         rm -rf $VOLUME_FILE
     fi
+    if [[ -d "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes" ]]; then
+        rm-rf "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes"
+    fi
 
     # unlink this container as "elasticsearch"
-    dokku link:delete "$APP" "$CONTAINER_NAME" "$PLUGIN_NAME"
     dokku config:unset "$APP" $ENVVAR_NAME
 
     echo
@@ -162,20 +174,6 @@ case "$1" in
         dokku config:set $APP $ENVVAR_NAME="http://${IP}:9200"
         echo
         echo "-----> $APP linked to $CONTAINER_NAME database"
-
-        # link this container as "elasticsearch"
-        #echo dokku link:create $APP $CONTAINER_NAME $PLUGIN_NAME
-        #dokku link:create "$APP" "$CONTAINER_NAME" "$PLUGIN_NAME"
-        #
-        # figure out IP to set env var
-        #echo ID: $(docker ps -a | grep "$CONTAINER_NAME" | awk '{ print $1 }')
-        #ID=$(docker ps -a | grep "$CONTAINER_NAME" | awk '{print $1}')
-        #echo IP: $(docker inspect $ID | grep IPAddress | cut -d '"' -f 4)
-        #IP=$(docker inspect $ID | grep IPAddress | cut -d '"' -f 4)
-        ## Link database using dokku command
-        #dokku config:set "$APP" $ENVVAR_NAME="http://${IP}:9200"
-        #echo
-        #echo "-----> $APP linked to $CONTAINER_NAME container"
     fi
     ;;
 
