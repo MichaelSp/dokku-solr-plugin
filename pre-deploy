@@ -28,10 +28,11 @@ if [[ -n $ES_APP_IMAGE_ID ]]; then
         echo "stopped."
 
         ES_VOLUME="$DOKKU_ROOT/$APP/elasticsearch:/data/elasticsearch/shared"
+        CONFIG_VOLUME="$DOKKU_ROOT/$APP/elasticsearch/volumes/config:/etc/elasticsearch"
 
         echo -n "      Launching $ES_APP_IMAGE... "
-        echo "COMMAND: docker run -v $ES_VOLUME -d $ES_APP_IMAGE /run.sh"
-        ID=$(docker run -v $ES_VOLUME -d $ES_APP_IMAGE /run.sh)
+        echo "COMMAND: docker run -v $CONFIG_VOLUME -v $ES_VOLUME -d $ES_APP_IMAGE /run.sh"
+        ID=$(docker run -v $CONFIG_VOLUME -v $ES_VOLUME -d $ES_APP_IMAGE /run.sh)
         sleep 1
         echo "ok."
     fi
