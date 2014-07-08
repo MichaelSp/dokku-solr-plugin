@@ -43,7 +43,6 @@ if [[ $1 == elasticsearch:* ]]; then
     CONTAINER_NAME="${PLUGIN_NAME}/${APP}"
     ELASTICSEARCH_DATA_DIR="$DOKKU_ROOT/$APP/$PLUGIN_NAME"
     CONTAINER_DATA_DIR="/data/elasticsearch/shared"
-    VOLUME_FILE="$ELASTICSEARCH_DATA_DIR/VOLUME"
     PORT_FILE="$ELASTICSEARCH_DATA_DIR/PORT"
     ENVVAR_NAME="ELASTICSEARCH_URL"
 fi
@@ -69,18 +68,11 @@ case "$1" in
     fi
 
     # Check if an existing DB volume exists
-    if [[ -f $VOLUME_FILE ]]; then
-        if [[ "dokku:dokku" != $(ls -l "$ELASTICSEARCH_DATA_DIR" | grep elasticsearch | awk '{ print $3":"$4 }') ]]; then
-            chown -R dokku:dokku "$ELASTICSEARCH_DATA_DIR"
-        fi
-        VOLUME="`cat $VOLUME_FILE`:$CONTAINER_DATA_DIR"
-        echo
-        echo "-----> Reusing $CONTAINER_NAME data"
-    else
-        touch "$VOLUME_FILE"
-        chown -R dokku:dokku $VOLUME_FILE
-        VOLUME=$CONTAINER_DATA_DIR
+    if [[ ! -f "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data" ]]; then
+        mkdir -p "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
+        chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
     fi
+    DATA_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data:$CONTAINER_DATA_DIR"
     if [[ ! -f "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config" ]]; then
         mkdir -p "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config"
         chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes"
@@ -95,18 +87,10 @@ case "$1" in
     IMAGE=$(docker commit $ID)
     docker tag $IMAGE $CONTAINER_NAME
     # Launch container
-    echo docker run -v "$CONFIG_VOLUME" -v $VOLUME -p 9200 -d $CONTAINER_NAME /run.sh
-    ID=$(docker run -v "$CONFIG_VOLUME" -v $VOLUME -p 9200 -d $CONTAINER_NAME /run.sh)
+    echo docker run -v "$CONFIG_VOLUME" -v "$DATA_VOLUME" -p 9200 -d $CONTAINER_NAME /run.sh
+    ID=$(docker run -v "$CONFIG_VOLUME" -v "$DATA_VOLUME" -p 9200 -d $CONTAINER_NAME /run.sh)
     sleep 4
-    # Rename persistent volume
-    if [[ ! -f "$VOLUME_FILE" ]]; then
-        VOLUME_PATH=$(docker inspect $ID | grep /var/lib/docker/vfs/dir/ | awk '{ print $2 }' | sed -e's/"//g')
-        if [[ -z $VOLUME_PATH ]]; then
-            echo "Your docker version is too old, please update it"
-            exit 1
-        fi
-        echo $VOLUME_PATH > "$VOLUME_FILE"
-    fi
+
     # Write port for further usage
     PORT=$(docker port $ID 9200 | sed 's/0.0.0.0://')
     echo $PORT > "$PORT_FILE"
@@ -133,10 +117,6 @@ case "$1" in
     IMAGE=$(docker images | grep "$CONTAINER_NAME" | awk '{ print $1 }')
     if [[ ! -z $IMAGE ]]; then
         docker rmi $IMAGE > /dev/null
-    fi
-    # Remove persistent volume
-    if [[ -d $VOLUME_FILE ]]; then
-        rm -rf $VOLUME_FILE
     fi
     if [[ -d "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes" ]]; then
         rm-rf "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes"
