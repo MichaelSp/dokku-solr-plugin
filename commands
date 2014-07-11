@@ -76,6 +76,7 @@ case "$1" in
     if [[ ! -f "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config" ]]; then
         mkdir -p "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config"
         chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes"
+        #cp elasticsearch.yml "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config/"
     fi
     CONFIG_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config:/etc/elasticsearch"
 
@@ -119,7 +120,7 @@ case "$1" in
         docker rmi $IMAGE > /dev/null
     fi
     if [[ -d "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes" ]]; then
-        rm-rf "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes"
+        rm -rf "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
     fi
 
     # unlink this container as "elasticsearch"
