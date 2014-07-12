@@ -73,12 +73,6 @@ case "$1" in
         chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
     fi
     DATA_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data:$CONTAINER_DATA_DIR"
-    if [[ ! -f "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config" ]]; then
-        mkdir -p "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config"
-        chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes"
-        #cp elasticsearch.yml "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config/"
-    fi
-    CONFIG_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config:/etc/elasticsearch"
 
     # Fork DB image
     echo "Running parent image"
@@ -88,8 +82,8 @@ case "$1" in
     IMAGE=$(docker commit $ID)
     docker tag $IMAGE $CONTAINER_NAME
     # Launch container
-    echo docker run -v "$CONFIG_VOLUME" -v "$DATA_VOLUME" -p 9200 -d $CONTAINER_NAME /run.sh
-    ID=$(docker run -v "$CONFIG_VOLUME" -v "$DATA_VOLUME" -p 9200 -d $CONTAINER_NAME /run.sh)
+    echo docker run -v "$DATA_VOLUME" -p 9200 -d $CONTAINER_NAME /run.sh
+    ID=$(docker run -v "$DATA_VOLUME" -p 9200 -d $CONTAINER_NAME /run.sh)
     sleep 4
 
     # Write port for further usage
