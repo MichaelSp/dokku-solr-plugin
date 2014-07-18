@@ -9,6 +9,11 @@ CONTAINER_DATA_DIR=/data/elasticsearch/shared
 DOCKER_IMAGE=$MAINTAINER/$PLUGIN_NAME
 ES_APP_IMAGE=$PLUGIN_NAME/$APP
 
+if [[ -z "$APP" ]]; then
+    echo "Error: You must specify an app"
+    exit
+fi
+
 # Check if an existing DB volume exists
 ES_APP_IMAGE_ID=$(docker images | grep "$ES_APP_IMAGE" | awk '{ print $3 }')
 if [[ -n $ES_APP_IMAGE_ID ]]; then
