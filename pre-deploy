@@ -32,7 +32,7 @@ if [[ -n $ES_APP_IMAGE_ID ]]; then
 
         ES_DATA_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data:$CONTAINER_DATA_DIR"
 
-        echo -n "      Launching $ES_APP_IMAGE... "
+        echo -n "       Launching $ES_APP_IMAGE... "
         echo "COMMAND: docker run -v $ES_DATA_VOLUME -d $ES_APP_IMAGE /run.sh"
         ID=$(docker run -v $ES_DATA_VOLUME -d $ES_APP_IMAGE /run.sh)
         sleep 1
