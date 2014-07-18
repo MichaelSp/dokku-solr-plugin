@@ -16,7 +16,7 @@ fi
 
 echo "ELASTICSEARCH!!!"
 
-now > /tmp/last-elasticsearch-pre-deploy-run
+date > /tmp/last-elasticsearch-pre-deploy-run
 
 # Check if an existing DB volume exists
 ES_APP_IMAGE_ID=$(docker images | grep "$ES_APP_IMAGE" | awk '{ print $3 }')
