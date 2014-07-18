@@ -3,9 +3,11 @@ set -e;
 
 APP="$1"
 
-CONTAINER_DATA_DIR="/data/elasticsearch/shared"
-DOCKER_IMAGE="blag/elasticsearch"
-ES_APP_IMAGE="elasticsearch/$APP"
+PLUGIN_NAME=elasticsearch
+MAINTAINER=blag
+CONTAINER_DATA_DIR=/data/elasticsearch/shared
+DOCKER_IMAGE=$MAINTAINER/$PLUGIN_NAME
+ES_APP_IMAGE=$PLUGIN_NAME/$APP
 
 # Check if an existing DB volume exists
 ES_APP_IMAGE_ID=$(docker images | grep "$ES_APP_IMAGE" | awk '{ print $3 }')
