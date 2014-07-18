@@ -10,13 +10,9 @@ DOCKER_IMAGE="$MAINTAINER/$PLUGIN_NAME"
 ES_APP_IMAGE="$PLUGIN_NAME/$APP"
 
 if [[ -z "$APP" ]]; then
-    echo "Error: You must specify an app"
+    echo "Error: You must specify an app" >&2
     exit
 fi
-
-echo "ELASTICSEARCH!!!"
-
-date > /tmp/last-elasticsearch-pre-deploy-run
 
 # Check if an existing DB volume exists
 ES_APP_IMAGE_ID=$(docker images | grep "$ES_APP_IMAGE" | awk '{ print $3 }')
