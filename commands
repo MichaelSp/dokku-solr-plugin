@@ -76,7 +76,7 @@ case "$1" in
 
     # Fork DB image
     echo "Running parent image"
-    ID=$(docker run -d $DOCKER_IMAGE)
+    ID=$(docker run -d $DOCKER_IMAGE /bin/bash -c "exit 0")
     docker wait $ID > /dev/null
     echo "Committing image"
     IMAGE=$(docker commit $ID)
