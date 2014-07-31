@@ -74,6 +74,12 @@ case "$1" in
         chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
     fi
     DATA_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
+
+    # Check if an existing DB config volume exists
+    if [[ ! -f "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config" ]]; then
+        mkdir -p "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config"
+        chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config"
+    fi
     CONFIG_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config"
 
     # Fork DB image
@@ -84,7 +90,7 @@ case "$1" in
     IMAGE=$(docker commit $ID)
     docker tag $IMAGE $CONTAINER_NAME
     # Launch container
-    ID=$(docker run -V "$CONFIG_VOLUME:$CONTAINER_CONFIG_DIR:rw" -v "$DATA_VOLUME:$CONTAINER_DATA_DIR" -p 9200 -d $CONTAINER_NAME /run.sh)
+    ID=$(docker run -v "$CONFIG_VOLUME:$CONTAINER_CONFIG_DIR:rw" -v "$DATA_VOLUME:$CONTAINER_DATA_DIR" -p 9200 -d $CONTAINER_NAME /run.sh)
     sleep 4
 
     # Write port for further usage
