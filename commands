@@ -159,8 +159,10 @@ case "$1" in
     ;;
 
   elasticsearch:logs)
-    ID=$(docker ps -a | grep "$CONTAINER_NAME" |  awk '{print $1}')
-    docker logs $ID | tail -n 100
+    IDS=$(docker ps -a | grep "$CONTAINER_NAME" |  awk '{print $1}')
+    for ID in $IDS; do
+        docker logs $ID | tail -n 100
+    done
     ;;
  
   help)
