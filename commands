@@ -72,7 +72,7 @@ case "$1" in
         mkdir -p "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
         chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
     fi
-    DATA_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data:$CONTAINER_DATA_DIR"
+    DATA_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
 
     # Fork DB image
     echo "Running parent image"
@@ -82,8 +82,7 @@ case "$1" in
     IMAGE=$(docker commit $ID)
     docker tag $IMAGE $CONTAINER_NAME
     # Launch container
-    echo docker run -v "$DATA_VOLUME" -p 9200 -d $CONTAINER_NAME /run.sh
-    ID=$(docker run -v "$DATA_VOLUME" -p 9200 -d $CONTAINER_NAME /run.sh)
+    ID=$(docker run -v "$DATA_VOLUME:$CONTAINER_DATA_DIR:rw" -p 9200 -d $CONTAINER_NAME /run.sh)
     sleep 4
 
     # Write port for further usage
