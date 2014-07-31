@@ -43,6 +43,7 @@ if [[ $1 == elasticsearch:* ]]; then
     CONTAINER_NAME="${PLUGIN_NAME}/${APP}"
     ELASTICSEARCH_DATA_DIR="$DOKKU_ROOT/$APP/$PLUGIN_NAME"
     CONTAINER_DATA_DIR="/data/elasticsearch/shared"
+    CONTAINER_CONFIG_DIR="/etc/elasticsearch"
     PORT_FILE="$ELASTICSEARCH_DATA_DIR/PORT"
     ENVVAR_NAME="ELASTICSEARCH_URL"
 fi
@@ -73,6 +74,7 @@ case "$1" in
         chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
     fi
     DATA_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
+    CONFIG_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/config"
 
     # Fork DB image
     echo "Running parent image"
@@ -82,7 +84,7 @@ case "$1" in
     IMAGE=$(docker commit $ID)
     docker tag $IMAGE $CONTAINER_NAME
     # Launch container
-    ID=$(docker run -v "$DATA_VOLUME:$CONTAINER_DATA_DIR:rw" -p 9200 -d $CONTAINER_NAME /run.sh)
+    ID=$(docker run -V "$CONFIG_VOLUME:$CONTAINER_CONFIG_DIR:rw" -v "$DATA_VOLUME:$CONTAINER_DATA_DIR" -p 9200 -d $CONTAINER_NAME /run.sh)
     sleep 4
 
     # Write port for further usage
