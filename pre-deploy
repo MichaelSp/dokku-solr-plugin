@@ -39,7 +39,7 @@ if [[ -n $ES_APP_IMAGE_ID ]]; then
 
         echo -n "       Launching $ES_APP_IMAGE... "
         echo "COMMAND: docker run -v $ES_DATA_VOLUME -d $ES_APP_IMAGE /run.sh"
-        ID=$(docker run -v $ES_DATA_VOLUME -p 9200:9200 -d $ES_APP_IMAGE /run.sh)
+        ID=$(docker run -v $ES_DATA_VOLUME -d --name elasticsearch $ES_APP_IMAGE /run.sh)
         sleep 1
         echo "ok."
     fi
