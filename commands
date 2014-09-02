@@ -170,12 +170,12 @@ case "$1" in
 
   help)
     cat && cat<<EOF
-    solr:list                                      List all Solr containers
-    solr:create <app>                              Create a Solr container
-    solr:delete <app>                              Delete specified Solr container
-    solr:info <app>                                Display container informations
-    solr:link <app> <container>                    Link an app to a Solr container
-    solr:logs <app>                                Display last logs from Solr container
+    solr:list                                       List all Solr containers
+    solr:create <app>                               Create a Solr container
+    solr:delete <app>                               Delete specified Solr container
+    solr:info <app>                                 Display container informations
+    solr:link <app> <container>                     Link an app to a Solr container
+    solr:logs <app>                                 Display last logs from Solr container
 EOF
     ;;
 
