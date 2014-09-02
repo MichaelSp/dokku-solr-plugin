@@ -1,6 +1,6 @@
 #!/bin/bash
 
 # Build docker image
-git clone https://github.com/blag/dokku-elasticsearch-dockerfiles.git /tmp/dokku-elasticsearch-dockerfiles
-docker build -q=true -t blag/elasticsearch /tmp/dokku-elasticsearch-dockerfiles
-rm -rf /tmp/dokku-elasticsearch-dockerfiles
+git clone https://github.com/makuk66/docker-solr.git /tmp/dokku-solr-dockerfiles
+docker build -q=true -t makuk66/docker-solr /tmp/dokku-solr-dockerfiles
+rm -rf /tmp/dokku-solr-dockerfiles

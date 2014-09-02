@@ -2,9 +2,9 @@
 set -e;
 
 # Check if name is specified
-if [[ $1 == elasticsearch:* ]]; then
+if [[ $1 == solr:* ]]; then
     if [[ -z $2 ]]; then
-        if [[ "$1" != "elasticsearch:list" ]]; then
+        if [[ "$1" != "solr:list" ]]; then
             echo "You must specify an app name"
             exit 1
         fi
@@ -38,14 +38,14 @@ if [[ $1 == elasticsearch:* ]]; then
         exit 1
     fi
 
-    DOCKER_IMAGE=blag/elasticsearch
-    PLUGIN_NAME="elasticsearch"
+    DOCKER_IMAGE=makuk66/docker-solr
+    PLUGIN_NAME="solr"
     CONTAINER_NAME="${PLUGIN_NAME}/${APP}"
-    ELASTICSEARCH_DATA_DIR="$DOKKU_ROOT/$APP/$PLUGIN_NAME"
-    CONTAINER_DATA_DIR="/data/elasticsearch/shared"
-    CONTAINER_CONFIG_DIR="/etc/elasticsearch"
-    PORT_FILE="$ELASTICSEARCH_DATA_DIR/PORT"
-    ENVVAR_NAME="ELASTICSEARCH_URL"
+    SOLR_DATA_DIR="$DOKKU_ROOT/$APP/$PLUGIN_NAME"
+    CONTAINER_DATA_DIR="/data/solr/shared"
+    CONTAINER_CONFIG_DIR="/etc/solr"
+    PORT_FILE="$SOLR_DATA_DIR/PORT"
+    ENVVAR_NAME="SOLR_URL"
 fi
 
 if [[ ! -d "$DOKKU_ROOT/$APP/$PLUGIN_NAME" ]]; then
@@ -54,26 +54,26 @@ if [[ ! -d "$DOKKU_ROOT/$APP/$PLUGIN_NAME" ]]; then
 fi
 
 case "$1" in
-  elasticsearch:create)
-    # Check if Elasticsearch container is installed
+  solr:create)
+    # Check if Solr container is installed
     IMAGE=$(docker images | grep ${DOCKER_IMAGE} | awk '{print $3}')
     if [[ -z $IMAGE ]]; then
-        echo "Elasticsearch image not found... Did you run 'dokku plugins-install' ?"
+        echo "Solr image not found... Did you run 'dokku plugins-install' ?"
         exit 1
     fi
 
-    # Stop existing container with the same persistent Elasticsearch
+    # Stop existing container with the same persistent Solr
     ID=$(docker ps | grep "$CONTAINER_NAME" | awk '{print $1}')
     if [[ ! -z "$ID" ]]; then
         docker stop $ID > /dev/null
     fi
 
     # Check if an existing DB volume exists
-    if [[ ! -f "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data" ]]; then
-        mkdir -p "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
-        chown -R dokku: "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
-    fi
     DATA_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data"
+    if [[ ! -f "$DATA_VOLUME" ]]; then
+        mkdir -p "$DATA_VOLUME"
+        chown -R dokku: "$DATA_VOLUME"
+    fi
 
     # Fork DB image
     echo "Running parent image"
@@ -83,7 +83,7 @@ case "$1" in
     IMAGE=$(docker commit $ID)
     docker tag $IMAGE $CONTAINER_NAME
     # Launch container
-    ID=$(docker run -v "$DATA_VOLUME:$CONTAINER_DATA_DIR" -p 9200 -d $CONTAINER_NAME /run.sh)
+    ID=$(docker run -v "$DATA_VOLUME:$CONTAINER_DATA_DIR" -p 9200 -d $CONTAINER_NAME /bin/bash -c "cd /opt/solr/example; java -jar start.jar")
     sleep 4
 
     # Write port for further usage
@@ -92,14 +92,14 @@ case "$1" in
 
     # Link to a potential existing app
     echo "Linking"
-    dokku elasticsearch:link $APP $APP
+    dokku solr:link $APP $APP
     echo
-    echo "-----> Elasticsearch container created: $CONTAINER_NAME"
+    echo "-----> Solr container created: $CONTAINER_NAME"
     sleep 1
-    dokku elasticsearch:info $APP
+    dokku solr:info $APP
     ;;
 
-  elasticsearch:delete)
+  solr:delete)
     ID=$(docker ps -a | grep "$CONTAINER_NAME:latest" |  awk '{print $1}')
     # Stop and remove the container
     if [[ ! -z $ID ]]; then
@@ -117,14 +117,14 @@ case "$1" in
         rm -rf "$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes"
     fi
 
-    # unlink this container as "elasticsearch"
+    # unlink this container as "solr"
     dokku config:unset "$APP" $ENVVAR_NAME
 
     echo
-    echo "-----> Elasticsearch container deleted: $CONTAINER_NAME"
+    echo "-----> Solr container deleted: $CONTAINER_NAME"
     ;;
 
-  elasticsearch:info)
+  solr:info)
     ID=$(docker ps -a | grep "$CONTAINER_NAME" | awk '{ print $1 }')
     IP=$(docker inspect $ID | grep IPAddress | cut -d '"' -f 4)
 
@@ -134,7 +134,7 @@ case "$1" in
     echo
     ;;
 
-  elasticsearch:link)
+  solr:link)
     if $APP_EXISTS; then
         # Check argument
         if [[ -z $3 ]]; then
@@ -143,39 +143,39 @@ case "$1" in
         fi
         CONTAINER_NAME="${PLUGIN_NAME}/$APP"
 
-        # Link this container as "elasticsearch"
+        # Link this container as "solr"
         dokku link:create "$APP" "$CONTAINER_NAME" "$PLUGIN_NAME"
 
         PORT=$(cat "$PORT_FILE")
         ID=$(docker ps -a | grep "$CONTAINER_NAME" | awk '{ print $1 }')
         IP=$(docker inspect $ID | grep IPAddress | cut -d '"' -f 4)
         # Link database using dokku command
-        dokku config:set $APP $ENVVAR_NAME="http://elasticsearch:9200"
+        dokku config:set $APP $ENVVAR_NAME="http://solr:9200"
         echo
         echo "-----> $APP linked to $CONTAINER_NAME database"
     fi
     ;;
 
-  elasticsearch:list)
-    echo Elasticsearch containers:
+  solr:list)
+    echo Solr containers:
     ls -d ${DOKKU_ROOT}/*/${PLUGIN_NAME} 2>/dev/null | sed "s|${DOKKU_ROOT}/\(.*\)/${PLUGIN_NAME}\$|  - \1|"
     ;;
 
-  elasticsearch:logs)
+  solr:logs)
     IDS=$(docker ps -a | grep "$CONTAINER_NAME" |  awk '{print $1}')
     for ID in $IDS; do
         docker logs $ID | tail -n 100
     done
     ;;
- 
+
   help)
     cat && cat<<EOF
-    elasticsearch:list                                      List all Elasticsearch containers
-    elasticsearch:create <app>                              Create a Elasticsearch container
-    elasticsearch:delete <app>                              Delete specified Elasticsearch container
-    elasticsearch:info <app>                                Display container informations
-    elasticsearch:link <app> <container>                    Link an app to a Elasticsearch container
-    elasticsearch:logs <app>                                Display last logs from Elasticsearch container
+    solr:list                                      List all Solr containers
+    solr:create <app>                              Create a Solr container
+    solr:delete <app>                              Delete specified Solr container
+    solr:info <app>                                Display container informations
+    solr:link <app> <container>                    Link an app to a Solr container
+    solr:logs <app>                                Display last logs from Solr container
 EOF
     ;;
 

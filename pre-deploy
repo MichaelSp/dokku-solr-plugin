@@ -3,11 +3,11 @@ set -e;
 
 APP="$1"
 
-PLUGIN_NAME=elasticsearch
-MAINTAINER=blag
-CONTAINER_DATA_DIR=/data/elasticsearch/shared
+PLUGIN_NAME=solr
+MAINTAINER=makuk66
+CONTAINER_DATA_DIR=/data/solr/shared
 DOCKER_IMAGE="$MAINTAINER/$PLUGIN_NAME"
-ES_APP_IMAGE="$PLUGIN_NAME/$APP"
+SOLR_APP_IMAGE="$PLUGIN_NAME/$APP"
 
 if [[ -z "$APP" ]]; then
     echo "Error: You must specify an app" >&2
@@ -15,31 +15,31 @@ if [[ -z "$APP" ]]; then
 fi
 
 # Check if an existing DB volume exists
-ES_APP_IMAGE_ID=$(docker images | grep "$ES_APP_IMAGE" | awk '{ print $3 }')
-if [[ -n $ES_APP_IMAGE_ID ]]; then
-    echo    "-----> Checking status of Elasticsearch"
+SOLR_APP_IMAGE_ID=$(docker images | grep "$SOLR_APP_IMAGE" | awk '{ print $3 }')
+if [[ -n $SOLR_APP_IMAGE_ID ]]; then
+    echo    "-----> Checking status of Solr"
 
-    # Check if Elasticsearch container is installed
-    ES_IMAGE=$(docker images | grep "$DOCKER_IMAGE" | awk '{ print $3 }')
-    if [[ -z $ES_IMAGE ]]; then
-        echo "Elasticsearch image not found... Did you run 'dokku plugins-install' ?"
+    # Check if Solr container is installed
+    SOLR_IMAGE=$(docker images | grep "$DOCKER_IMAGE" | awk '{ print $3 }')
+    if [[ -z $SOLR_IMAGE ]]; then
+        echo "Solr image not found... Did you run 'dokku plugins-install' ?"
         exit 1
     fi
 
-    echo    "       Found image elasticsearch/$APP database"
+    echo    "       Found image solr/$APP database"
     echo -n "       Checking status... "
 
-    ES_APP_CONTAINER_ID=$(docker ps | grep "$ES_APP_IMAGE" | awk '{ print $1 }')
-    if [[ -n $ES_APP_CONTAINER_ID ]]; then
+    SOLR_APP_CONTAINER_ID=$(docker ps | grep "$SOLR_APP_IMAGE" | awk '{ print $1 }')
+    if [[ -n $SOLR_APP_CONTAINER_ID ]]; then
         echo "ok."
     else
         echo "stopped."
 
-        ES_DATA_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data:$CONTAINER_DATA_DIR"
+        SOLR_DATA_VOLUME="$DOKKU_ROOT/$APP/$PLUGIN_NAME/volumes/data:$CONTAINER_DATA_DIR"
 
-        echo -n "       Launching $ES_APP_IMAGE... "
-        echo "COMMAND: docker run -v $ES_DATA_VOLUME -d $ES_APP_IMAGE /run.sh"
-        ID=$(docker run -v $ES_DATA_VOLUME -d --name elasticsearch $ES_APP_IMAGE /run.sh)
+        echo -n "       Launching $SOLR_APP_IMAGE... "
+        echo "COMMAND: docker run -v $SOLR_DATA_VOLUME -d $SOLR_APP_IMAGE /bin/bash -c \"cd /opt/solr/example; java -jar start.jar\""
+        ID=$(docker run -v $SOLR_DATA_VOLUME -d --name solr $SOLR_APP_IMAGE /bin/bash -c "cd /opt/solr/example; java -jar start.jar")
         sleep 1
         echo "ok."
     fi

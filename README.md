@@ -1,4 +1,4 @@
-Elasticsearch plugin for Dokku
+Solr plugin for Dokku
 ------------------------------
 
 Project: https://github.com/progrium/dokku
@@ -7,25 +7,25 @@ Installation
 ------------
 ```
 cd /var/lib/dokku/plugins
-git clone https://github.com/jezdez/dokku-elasticsearch-plugin elasticsearch
+git clone https://github.com/MichaelSp/dokku-solr-plugin solr
 dokku plugins-install
 ```
 
 This plugin also requires the dokku-link plugin to be installed:
 https://github.com/rlaneve/dokku-link
 
-It uses the excellent Elasticsearch docker image by the people at Orchard
-( https://orchardup.com/ ): https://github.com/orchardup/docker-elasticsearch
+It uses the excellent solr docker image by makuk66
+https://github.com/makuk66/docker-solr
 
 Commands
 --------
 ```
 $ dokku help
-     elasticsearch:create <app>            Create a Elasticsearch container
-     elasticsearch:delete <app>            Delete specified Elasticsearch container
-     elasticsearch:info <app>              Display container informations
-     elasticsearch:link <app> <container>  Link an app to a Elasticsearch container
-     elasticsearch:logs <app>              Display last logs from Elasticsearch container
+     solr:create <app>            Create a Solr container
+     solr:delete <app>            Delete specified Solr container
+     solr:info <app>              Display container informations
+     solr:link <app> <container>  Link an app to a Solr container
+     solr:logs <app>              Display last logs from Solr container
 ```
 
 Simple usage
@@ -33,10 +33,10 @@ Simple usage
 
 Create a new Container:
 ```
-$ dokku elasticsearch:create foo            # Server side
-$ ssh dokku@server elasticsearch:create foo # Client side
+$ dokku solr:create foo            # Server side
+$ ssh dokku@server solr:create foo # Client side
 
------> Elasticsearch container created: elasticsearch/foo
+-----> Solr container created: solr/foo
 
        Host: 172.16.0.104
        Private ports: 9200, 9300
@@ -47,20 +47,20 @@ Advanced usage
 
 Deleting containers:
 ```
-dokku elasticsearch:delete foo
+dokku solr:delete foo
 ```
 
 Linking an app to a specific container:
 ```
-dokku elasticsearch:link foo bar
+dokku solr:link foo bar
 ```
 
-Elasticsearch logs (per container):
+Solr logs (per container):
 ```
-dokku elasticsearch:logs foo
+dokku solr:logs foo
 ```
 
-Elasticsearch information:
+Solr information:
 ```
-dokku elasticsearch:info foo
+dokku solr:info foo
 ```
